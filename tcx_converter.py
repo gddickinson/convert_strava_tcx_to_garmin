@@ -11,7 +11,16 @@ import argparse
 import os
 import re
 
-def clean_tcx_for_garmin(input_file, output_file=None, default_lat=30.2672, default_lng=-97.7431):
+# ── Default configuration ────────────────────────────────────────────
+# Default GPS coordinates for indoor activities (Austin, TX)
+DEFAULT_LAT = 30.2672
+DEFAULT_LNG = -97.7431
+# Default altitude in meters for trackpoints without altitude data
+DEFAULT_ALTITUDE = "192.60000610351562"
+# Default average speed for lap extensions (m/s)
+DEFAULT_AVG_SPEED = "4.9846988191804575"
+
+def clean_tcx_for_garmin(input_file, output_file=None, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
     """
     Convert a TCX file to be compatible with Garmin Connect
 
@@ -95,7 +104,7 @@ def convert_activity_to_garmin_format(activity, default_lat, default_lng):
             try:
                 dt = datetime.fromisoformat(child.text.replace('Z', '+00:00'))
                 new_id.text = dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
-            except:
+            except (ValueError, AttributeError):
                 new_id.text = child.text
 
         elif tag == 'Creator':
@@ -125,7 +134,7 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng):
         try:
             dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
             new_lap.set('StartTime', dt.strftime('%Y-%m-%dT%H:%M:%S.000Z'))
-        except:
+        except (ValueError, AttributeError):
             new_lap.set('StartTime', start_time)
 
     # Copy lap-level elements
@@ -140,7 +149,7 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng):
             new_ext = ET.SubElement(new_lap, 'Extensions')
             lx_elem = ET.SubElement(new_ext, 'ns3:LX')
             avg_speed = ET.SubElement(lx_elem, 'ns3:AvgSpeed')
-            avg_speed.text = "4.9846988191804575"  # Default value
+            avg_speed.text = DEFAULT_AVG_SPEED
         else:
             # Copy other lap elements
             new_lap.append(copy_element_recursive(child))
@@ -171,7 +180,7 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
             try:
                 dt = datetime.fromisoformat(child.text.replace('Z', '+00:00'))
                 new_time.text = dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
-            except:
+            except (ValueError, AttributeError):
                 new_time.text = child.text
             break
 
@@ -184,7 +193,7 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
 
     # 3. Altitude (always add)
     altitude_elem = ET.SubElement(new_trackpoint, 'AltitudeMeters')
-    altitude_elem.text = "192.60000610351562"
+    altitude_elem.text = DEFAULT_ALTITUDE
 
     # 4. Distance (if present in original)
     for child in trackpoint:
@@ -210,7 +219,7 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
                                 speed = max(0.1, watts / 50.0)  # Rough conversion
                                 speed_elem = ET.SubElement(tpx_elem, 'ns3:Speed')
                                 speed_elem.text = str(speed)
-                            except:
+                            except (ValueError, TypeError):
                                 pass
                             break
             break
@@ -300,7 +309,7 @@ def write_garmin_format_file(root, output_file):
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write('\n'.join(lines))
 
-def process_batch(input_folder, output_folder=None, default_lat=30.2672, default_lng=-97.7431):
+def process_batch(input_folder, output_folder=None, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
     """
     Process all TCX files in a folder
 
@@ -375,9 +384,9 @@ def main():
     parser.add_argument('input_path', help='Input TCX file path OR folder containing TCX files')
     parser.add_argument('-o', '--output', help='Output TCX file path OR output folder (for batch processing)')
     parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
-    parser.add_argument('--lat', type=float, default=30.2672,
+    parser.add_argument('--lat', type=float, default=DEFAULT_LAT,
                        help='Default latitude for indoor activities (default: Austin, TX)')
-    parser.add_argument('--lng', type=float, default=-97.7431,
+    parser.add_argument('--lng', type=float, default=DEFAULT_LNG,
                        help='Default longitude for indoor activities (default: Austin, TX)')
     parser.add_argument('--batch', action='store_true',
                        help='Force batch mode (process all .tcx files in folder)')
@@ -435,7 +444,7 @@ def main():
                 print(f"- Added ns3:LX lap extensions with average speed")
                 print(f"- Maintained all timing and distance data")
                 print(f"- Used GPS coordinates: {args.lat}, {args.lng}")
-                if args.lat == 30.2672 and args.lng == -97.7431:
+                if args.lat == DEFAULT_LAT and args.lng == DEFAULT_LNG:
                     print(f"  (Default: Austin, TX)")
 
             return 0 if not results['failed'] else 1
@@ -458,7 +467,7 @@ def main():
                 print("- Added ns3:LX lap extensions with average speed")
                 print("- Maintained all timing and distance data")
                 print(f"- Used GPS coordinates: {args.lat}, {args.lng}")
-                if args.lat == 30.2672 and args.lng == -97.7431:
+                if args.lat == DEFAULT_LAT and args.lng == DEFAULT_LNG:
                     print("  (Default: Austin, TX)")
 
             return 0
