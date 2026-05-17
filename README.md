@@ -214,3 +214,7 @@ Developed to solve the common issue of importing Strava TCX exports into Garmin 
 ---
 
 **Happy converting! 🚴‍♂️💪**
+
+
+---
+*Built with AI assistance from [Claude (Anthropic)](https://claude.com/).*
