@@ -109,8 +109,8 @@ Changes made to match Garmin Connect format exactly:
 - Added .000Z timestamp format
 - Used ns3:TPX extensions format
 - Added Garmin-style Author section with Connect Api
-- Added dummy GPS coordinates for indoor activity
-- Added AltitudeMeters to all trackpoints
+- Added dummy GPS coordinates for indoor activity (recorded GPS is kept)
+- Added AltitudeMeters to trackpoints of activities without altitude data
 - Converted power data to speed estimates
 - Maintained all timing and distance data
 - Used GPS coordinates: 30.2672, -97.7431 (Default: Austin, TX)
@@ -133,8 +133,8 @@ The script transforms Strava TCX files to match Garmin Connect's exact requireme
 - **Author section** - Adds Garmin-style metadata with "Connect Api" signature
 
 ### Data Enhancements
-- **GPS coordinates** - Adds dummy latitude/longitude for indoor activities
-- **Altitude data** - Adds required AltitudeMeters to all trackpoints
+- **GPS coordinates** - Adds dummy latitude/longitude for indoor activities (activities with recorded GPS keep their own positions)
+- **Altitude data** - Adds the required AltitudeMeters to every trackpoint of activities without altitude data (recorded altitude is kept)
 - **Timestamp format** - Converts to `.000Z` format (e.g., `2025-05-22T21:09:59.000Z`)
 - **Speed data** - Converts power measurements to estimated speed values
 - **Extensions format** - Uses proper `ns3:TPX` namespace format

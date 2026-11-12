@@ -20,12 +20,13 @@ convert_strava_tcx_to_garmin/
 | `clean_tcx_for_garmin()` | `tcx_converter.py` | Main entry: converts a single TCX file to Garmin format |
 | `convert_tcx_bytes()` | `tcx_core.py` | Converts TCX data (bytes/str) and returns the Garmin XML text |
 | `garmin_xml_string()` | `tcx_core.py` | Serialises the converted tree in the exact Garmin layout |
+| `local_name()`, `find_child()` | `tcx_core.py` | Namespace-free tag name; first child by local name |
 | `format_garmin_time()` | `tcx_core.py` | ISO time -> `YYYY-MM-DDTHH:MM:SS.000Z` in UTC (unparseable text unchanged) |
 | `create_garmin_root()` | `tcx_core.py` | Creates root XML element with Garmin namespaces |
 | `convert_activity_to_garmin_format()` | `tcx_core.py` | Converts Activity element (sets Sport="Other", formats timestamps) |
 | `convert_lap_to_garmin_format()` | `tcx_core.py` | Converts Lap element with extensions |
 | `convert_track_to_garmin_format()` | `tcx_core.py` | Converts Track element |
-| `convert_trackpoint_to_garmin_format()` | `tcx_core.py` | Converts Trackpoint: adds GPS, altitude, speed |
+| `convert_trackpoint_to_garmin_format()` | `tcx_core.py` | Converts Trackpoint: placeholder GPS/altitude for indoor activities, speed |
 | `add_garmin_author_section()` | `tcx_core.py` | Appends Garmin Author/Build metadata |
 | `write_garmin_format_file()` | `tcx_converter.py` | Writes a converted tree to a file (via `garmin_xml_string`) |
 | `print_changes()` | `tcx_converter.py` | Prints `GARMIN_CHANGES` (verbose mode) |

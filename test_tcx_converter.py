@@ -202,5 +202,30 @@ class TestTimestamps(unittest.TestCase):
         self.assertEqual(out.find(".//t:Trackpoint/t:Time", NS).text, "soon")
 
 
+class TestRecordedGps(unittest.TestCase):
+    OUTDOOR = ('<Id>2024-01-15T10:30:00Z</Id><Lap StartTime="2024-01-15T10:30:00Z"><Track>'
+               '<Trackpoint><Time>2024-01-15T10:30:00Z</Time>'
+               '<Position><LatitudeDegrees>0.0012345</LatitudeDegrees><LongitudeDegrees>-0.0023456</LongitudeDegrees></Position>'
+               '<AltitudeMeters>5.5</AltitudeMeters></Trackpoint>'
+               '<Trackpoint><Time>2024-01-15T10:30:01Z</Time></Trackpoint>'
+               '</Track></Lap>')
+
+    def test_recorded_positions_and_altitude_are_kept(self):
+        # Regression: every trackpoint got the dummy Austin position and altitude, even outdoor
+        # activities with real GPS, so their route was lost
+        tps = converted(tcx(self.OUTDOOR, sport="Running")).findall(".//t:Trackpoint", NS)
+        self.assertEqual(tps[0].find("t:Position/t:LatitudeDegrees", NS).text, "0.0012345")
+        self.assertEqual(tps[0].find("t:Position/t:LongitudeDegrees", NS).text, "-0.0023456")
+        self.assertEqual(tps[0].find("t:AltitudeMeters", NS).text, "5.5")
+        # a point without a fix in a GPS activity gets no made-up position
+        self.assertIsNone(tps[1].find("t:Position", NS))
+        self.assertIsNone(tps[1].find("t:AltitudeMeters", NS))
+
+    def test_indoor_activities_still_get_the_placeholder(self):
+        tp = converted(tcx(trackpoint("<Time>2024-01-15T10:30:00Z</Time>"))).find(".//t:Trackpoint", NS)
+        self.assertEqual(tp.find("t:Position/t:LatitudeDegrees", NS).text, str(DEFAULT_LAT))
+        self.assertEqual(tp.find("t:AltitudeMeters", NS).text, DEFAULT_ALTITUDE)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -26,8 +26,8 @@ GARMIN_CHANGES = [
     "Added .000Z timestamp format",
     "Used ns3:TPX extensions format",
     "Added Garmin-style Author section with Connect Api",
-    "Added dummy GPS coordinates for indoor activity",
-    "Added AltitudeMeters to all trackpoints",
+    "Added dummy GPS coordinates for indoor activity (recorded GPS is kept)",
+    "Added AltitudeMeters to trackpoints of activities without altitude data",
     "Converted power data to speed estimates",
     "Added ns3:LX lap extensions with average speed",
     "Maintained all timing and distance data",
@@ -69,6 +69,17 @@ def convert_tcx_bytes(data, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
 
 
 
+def local_name(tag):
+    """Tag without its '{namespace}' part"""
+    return tag.split('}')[-1]
+
+def find_child(element, name):
+    """First direct child whose tag (ignoring the namespace) is name, or None"""
+    for child in element:
+        if local_name(child.tag) == name:
+            return child
+    return None
+
 def format_garmin_time(text):
     """
     Format an ISO 8601 time as Garmin's 'YYYY-MM-DDTHH:MM:SS.000Z' (UTC, fraction dropped)
@@ -108,6 +119,10 @@ def convert_activity_to_garmin_format(activity, default_lat, default_lng):
     # Force Sport to "Other" like working Garmin files
     new_activity.set('Sport', 'Other')
 
+    # Placeholder position/altitude only for activities that recorded none (indoor workouts)
+    recorded = {local_name(e.tag) for e in activity.iter()}
+    keep = {'keep_position': 'Position' in recorded, 'keep_altitude': 'AltitudeMeters' in recorded}
+
     # Process child elements
     for child in activity:
         tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
@@ -122,7 +137,7 @@ def convert_activity_to_garmin_format(activity, default_lat, default_lng):
             pass
 
         elif tag == 'Lap':
-            new_lap = convert_lap_to_garmin_format(child, default_lat, default_lng)
+            new_lap = convert_lap_to_garmin_format(child, default_lat, default_lng, **keep)
             new_activity.append(new_lap)
 
         elif tag == 'Extensions':
@@ -134,7 +149,7 @@ def convert_activity_to_garmin_format(activity, default_lat, default_lng):
 
     return new_activity
 
-def convert_lap_to_garmin_format(lap, default_lat, default_lng):
+def convert_lap_to_garmin_format(lap, default_lat, default_lng, keep_position=False, keep_altitude=False):
     """Convert lap to Garmin format"""
     new_lap = ET.Element('Lap')
 
@@ -148,7 +163,8 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng):
         tag = child.tag.split('}')[-1] if '}' in child.tag else child.tag
 
         if tag == 'Track':
-            new_track = convert_track_to_garmin_format(child, default_lat, default_lng)
+            new_track = convert_track_to_garmin_format(child, default_lat, default_lng,
+                                                       keep_position, keep_altitude)
             new_lap.append(new_track)
         elif tag == 'Extensions':
             # Create Garmin-style lap extensions with average speed
@@ -162,19 +178,25 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng):
 
     return new_lap
 
-def convert_track_to_garmin_format(track, default_lat, default_lng):
+def convert_track_to_garmin_format(track, default_lat, default_lng, keep_position=False, keep_altitude=False):
     """Convert track to Garmin format"""
     new_track = ET.Element('Track')
 
     for trackpoint in track:
         if trackpoint.tag.split('}')[-1] == 'Trackpoint':
-            new_trackpoint = convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng)
+            new_trackpoint = convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng,
+                                                                 keep_position, keep_altitude)
             new_track.append(new_trackpoint)
 
     return new_track
 
-def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
-    """Convert trackpoint to exact Garmin format"""
+def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng, keep_position=False, keep_altitude=False):
+    """
+    Convert trackpoint to exact Garmin format
+
+    keep_position / keep_altitude: the activity recorded GPS / altitude, so copy the trackpoint's own
+    values (points without one get none) instead of adding the placeholder to every point.
+    """
     new_trackpoint = ET.Element('Trackpoint')
 
     # Process in specific order: Time, Position, Altitude, Distance, Extensions
@@ -186,16 +208,26 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
             new_time.text = format_garmin_time(child.text)
             break
 
-    # 2. Position (always add)
-    position_elem = ET.SubElement(new_trackpoint, 'Position')
-    lat_elem = ET.SubElement(position_elem, 'LatitudeDegrees')
-    lat_elem.text = str(default_lat)
-    lng_elem = ET.SubElement(position_elem, 'LongitudeDegrees')
-    lng_elem.text = str(default_lng)
+    # 2. Position: recorded one, or the placeholder for indoor activities
+    if keep_position:
+        position = find_child(trackpoint, 'Position')
+        if position is not None:
+            new_trackpoint.append(copy_element_recursive(position))
+    else:
+        position_elem = ET.SubElement(new_trackpoint, 'Position')
+        lat_elem = ET.SubElement(position_elem, 'LatitudeDegrees')
+        lat_elem.text = str(default_lat)
+        lng_elem = ET.SubElement(position_elem, 'LongitudeDegrees')
+        lng_elem.text = str(default_lng)
 
-    # 3. Altitude (always add)
-    altitude_elem = ET.SubElement(new_trackpoint, 'AltitudeMeters')
-    altitude_elem.text = DEFAULT_ALTITUDE
+    # 3. Altitude: recorded one, or the default for activities without altitude data
+    if keep_altitude:
+        altitude = find_child(trackpoint, 'AltitudeMeters')
+        if altitude is not None:
+            ET.SubElement(new_trackpoint, 'AltitudeMeters').text = altitude.text
+    else:
+        altitude_elem = ET.SubElement(new_trackpoint, 'AltitudeMeters')
+        altitude_elem.text = DEFAULT_ALTITUDE
 
     # 4. Distance (if present in original)
     for child in trackpoint:
