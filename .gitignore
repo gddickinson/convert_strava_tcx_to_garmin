@@ -1,0 +1,7 @@
+# Converted output files
+*_garmin.tcx
+
+# Python
+__pycache__/
+*.pyc
+.DS_Store
