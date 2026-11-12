@@ -16,9 +16,43 @@ Garmin Connect often rejects TCX files exported from Strava with the error "We d
 - **Progress tracking** - Shows conversion progress for batch operations
 - **Error handling** - Continues processing even if individual files fail
 
+## 🌐 Convert in your browser
+
+**https://gddickinson.github.io/convert_strava_tcx_to_garmin/** (static site, published from `main` by
+`.github/workflows/pages.yml`). Drop one or more TCX files: they are converted by JavaScript in your browser and
+**never uploaded** (the site has no server). Each file gets a preview (route map from its GPS points, distance,
+duration, laps, heart rate, power) and a download; several files download together as one zip. The placeholder
+position for indoor workouts can be changed. Two synthetic sample files (invented data) are there to try.
+
+| Home | Convert | About |
+|---|---|---|
+| ![Home](docs/img/home.png) | ![Convert](docs/img/convert.png) | ![About](docs/img/about.png) |
+
+### Run the web app locally
+
+```bash
+pip install -r requirements-web.txt
+python run_web.py            # http://127.0.0.1:8153
+```
+
+The local app has the same pages plus **Check with the Python converter**, which sends the files to the server on
+your own computer, converts them with `tcx_core.py` and compares the result with the browser's byte for byte.
+
+How the browser version was checked: `web/static/tcx_engine.js` is a port of `tcx_core.py`, including the Python
+behaviours the output depends on (ElementTree parsing/indentation/escaping, `datetime.fromisoformat`, `float()` and
+float printing). `scripts/make_tcx_fixture.py` converts the synthetic samples in `tests/fixtures/` with Python;
+`web/static/tcx_engine.test.mjs` (node) requires byte-identical output, and `tests/test_js_port.py` compares both
+on 800 seeded random mutations of the samples.
+
+```bash
+python -m pytest -q tests test_tcx_converter.py    # includes the node tests
+python scripts/build_static.py                     # static site -> site/
+```
+
 ## 📋 Requirements
 
-- Python 3.6 or higher
+- Python 3.9 or higher (the script uses `xml.etree.ElementTree.indent`, added in 3.9; Python 3.11+ also
+  understands more timestamp variants such as `,5` fractions)
 - No additional packages required (uses built-in libraries only)
 
 ## 🚀 Installation

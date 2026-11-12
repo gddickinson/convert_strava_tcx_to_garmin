@@ -15,6 +15,8 @@ George's global Claude preferences live in `~/.claude/CLAUDE.md` and apply to ev
 
 See [`INTERFACE.md`](./INTERFACE.md) for a navigation map of this repository's modules and how they connect. Read `INTERFACE.md` before opening individual source files.
 
+@INTERFACE.md
+
 ## Working with Claude on this repo
 
 When directing Claude Code on this codebase, follow the global rules above, prefer making targeted edits via the `Edit` tool over rewriting whole files, and update `INTERFACE.md` whenever the project structure changes.

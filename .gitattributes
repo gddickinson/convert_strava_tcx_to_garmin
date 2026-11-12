@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Test fixtures are compared byte for byte (edge_cases.tcx has CRLF line endings and a BOM on purpose)
+tests/fixtures/** -text

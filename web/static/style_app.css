@@ -1,0 +1,26 @@
+/* Strava TCX to Garmin: warm orange accent (activity), cyan and yellow secondaries. */
+:root { --accent:#ff7a2f; --accent2:#ffd23f; --accent3:#2fd0ff; --glow:rgba(255,122,47,.16); }
+button, .btn { color:#1a0800; }
+.mark { border-radius:4px; border:0; background:url(icon.svg) center/cover; box-shadow:0 0 12px var(--glow); }
+.drop { display:block; border:2px dashed var(--line); border-radius:8px; padding:16px 18px; text-align:center; cursor:pointer;
+  background:rgba(12,16,32,.6); transition:border-color .15s, background .15s; }
+.drop:hover, .drop.over, .drop:focus-within { border-color:var(--accent); background:color-mix(in srgb, var(--accent) 7%, transparent); }
+.drop b { display:block; font-size:19px; color:var(--ink); }
+.drop input[type=file] { max-width:320px; margin:12px auto 0; display:block; }
+.privacy { border-left:3px solid var(--accent3); padding:8px 14px; background:color-mix(in srgb, var(--accent3) 7%, transparent);
+  border-radius:0 4px 4px 0; margin:12px 0; font-size:14px; }
+.files { display:grid; gap:14px; margin-top:16px; }
+.file { display:grid; grid-template-columns:minmax(0,1fr) 340px; gap:16px; align-items:start; }
+.file h3 { margin:0 0 4px; color:var(--accent); text-transform:none; letter-spacing:0; font:600 16px var(--mono); overflow-wrap:anywhere; }
+.facts { display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:6px 14px; margin:10px 0; }
+.facts div { font-size:13px; color:var(--mute); } .facts b { display:block; color:var(--ink); font:600 16px var(--mono); }
+.route { width:100%; height:auto; background:#03050b; border:1px solid var(--line); border-radius:6px; display:block; }
+.noroute { border:1px dashed var(--line); border-radius:6px; padding:18px; font-size:13px; color:var(--mute); }
+.file pre { max-height:260px; overflow:auto; white-space:pre; font-size:12px; }
+.file details summary { cursor:pointer; color:var(--accent3); font-size:13px; margin-top:8px; }
+.bar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+.bar button { margin:0; }
+.pyres { font-size:13px; margin-top:6px; }
+.coords { display:grid; grid-template-columns:1fr 1fr; gap:10px; max-width:420px; }
+@media (max-width:860px) { .file { grid-template-columns:1fr; } }
+[hidden] { display:none !important; }

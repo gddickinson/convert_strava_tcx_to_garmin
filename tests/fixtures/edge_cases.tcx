@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<!-- Synthetic edge cases for tests: invented data, CRLF line endings, byte-order mark. -->
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:x="http://www.garmin.com/xmlschemas/ActivityExtension/v2">
+  <Activities>
+    <Activity Sport="Other">
+      <Id>2024-12-31T23:59:30+02:00</Id>
+      <Notes xml:lang="en">Tempo &amp; hills &lt;test&gt; "quoted" café → <![CDATA[raw <b>cdata</b> & more]]><!-- dropped --> end</Notes>
+      <Training xsi:type="Training_t" VirtualPartner="false"><Plan Type="Workout" IntervalWorkout="false"><Name>Line&#10;break &amp; tab&#9;here</Name></Plan></Training>
+      <Lap StartTime="2024-12-31T23:59:30.999+02:00">
+        <TotalTimeSeconds>30</TotalTimeSeconds>
+        <DistanceMeters>0</DistanceMeters>
+        <Track>
+          <Trackpoint>
+            <Time>2024-12-31T23:59:30+02:00</Time>
+            <DistanceMeters>0.0</DistanceMeters>
+            <Extensions><x:TPX><x:Watts>2</x:Watts></x:TPX></Extensions>
+          </Trackpoint>
+          <Trackpoint>
+            <Time>not a time</Time>
+            <Extensions><x:TPX><x:Speed>3.5</x:Speed><x:Watts>abc</x:Watts></x:TPX></Extensions>
+          </Trackpoint>
+          <Trackpoint>
+            <Time>2025-01-01 00:00:05.123456-05:30</Time>
+            <DistanceMeters>12.5</DistanceMeters>
+            <Extensions><x:TPX><x:Watts> 1_000 </x:Watts></x:TPX></Extensions>
+          </Trackpoint>
+          <Trackpoint>
+            <Time></Time>
+            <Extensions/>
+          </Trackpoint>
+        </Track>
+      </Lap>
+      <Lap>
+        <TotalTimeSeconds>5</TotalTimeSeconds>
+        <Track/>
+        <Extensions><x:LX><x:AvgSpeed>1.0</x:AvgSpeed></x:LX></Extensions>
+      </Lap>
+    </Activity>
+    <Activity Sport="Running">
+      <Id>20250102T030405Z</Id>
+      <Lap StartTime="2025-01-02">
+        <Track>
+          <Trackpoint><Time>2025-01-02T03:04:05,5Z</Time><Extensions><x:TPX><x:Watts>12.34</x:Watts></x:TPX></Extensions></Trackpoint>
+        </Track>
+      </Lap>
+    </Activity>
+  </Activities>
+</TrainingCenterDatabase>

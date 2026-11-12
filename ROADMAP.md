@@ -16,7 +16,7 @@ A single-file Python script (`tcx_converter.py`) that converts Strava-exported T
 - [ ] Support GPX to TCX conversion in addition to TCX-to-TCX reformatting
 - [ ] Add activity type auto-detection from TCX metadata
 - [ ] Implement power-to-speed conversion with configurable FTP and rider weight
-- [ ] Add summary statistics output (duration, distance, avg HR, avg power) after conversion
+- [ ] Add summary statistics output (duration, distance, avg HR, avg power) after conversion (the web app previews these; the CLI does not yet)
 - [ ] Support reading from Strava API directly (OAuth + activity download)
 - [ ] Add GUI mode using Tkinter for drag-and-drop file conversion
 
@@ -24,7 +24,7 @@ A single-file Python script (`tcx_converter.py`) that converts Strava-exported T
 - [ ] Build a cross-platform desktop app for non-technical users
 - [ ] Add Garmin Connect API upload integration (convert + upload in one step)
 - [ ] Support bidirectional conversion (Garmin -> Strava format)
-- [ ] Create a web service version for browser-based conversion
+- [x] Create a web service version for browser-based conversion (static site converts in the browser; `run_web.py` locally)
 - [ ] Package as a pip-installable CLI tool (`pip install strava2garmin`)
 
 ## Technical Debt

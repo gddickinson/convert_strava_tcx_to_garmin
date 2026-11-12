@@ -29,6 +29,11 @@ from tcx_core import (  # noqa: F401  (re-exported)
 )
 
 
+def garmin_output_name(input_file):
+    """Default output name: 'ride.tcx' -> 'ride_garmin.tcx' (same folder)"""
+    return f"{os.path.splitext(input_file)[0]}_garmin.tcx"
+
+
 def clean_tcx_for_garmin(input_file, output_file=None, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
     """
     Convert a TCX file to be compatible with Garmin Connect
@@ -47,8 +52,7 @@ def clean_tcx_for_garmin(input_file, output_file=None, default_lat=DEFAULT_LAT, 
 
     # Generate output filename if not provided
     if output_file is None:
-        base_name = os.path.splitext(input_file)[0]
-        output_file = f"{base_name}_garmin.tcx"
+        output_file = garmin_output_name(input_file)
 
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(text)
@@ -117,12 +121,10 @@ def process_batch(input_folder, output_folder=None, default_lat=DEFAULT_LAT, def
         try:
             # Generate output filename
             if output_folder:
-                base_name = os.path.splitext(filename)[0]
-                output_file = os.path.join(output_folder, f"{base_name}_garmin.tcx")
+                output_file = os.path.join(output_folder, garmin_output_name(filename))
             else:
                 # Place in same folder as input
-                base_name = os.path.splitext(input_file)[0]
-                output_file = f"{base_name}_garmin.tcx"
+                output_file = garmin_output_name(input_file)
 
             # Process the file
             clean_tcx_for_garmin(input_file, output_file, default_lat, default_lng)
