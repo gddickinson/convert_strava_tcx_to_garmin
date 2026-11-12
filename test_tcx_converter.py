@@ -178,5 +178,14 @@ class TestPowerToSpeed(unittest.TestCase):
         self.assertEqual(speeds, ["3.0"])
 
 
+class TestMultiLineText(unittest.TestCase):
+    def test_notes_keep_their_line_breaks_exactly(self):
+        # Regression: every line of the output was re-indented, which also inserted spaces into
+        # multi-line text such as activity Notes
+        notes = "First line\nsecond line\n  third, indented"
+        out = converted(tcx(f"<Id>2024-01-15T10:30:00Z</Id><Notes>{notes}</Notes>"))
+        self.assertEqual(out.find(".//t:Notes", NS).text, notes)
+
+
 if __name__ == "__main__":
     unittest.main()

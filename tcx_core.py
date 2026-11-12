@@ -289,13 +289,14 @@ def garmin_xml_string(root):
     lines.append('  xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"')
     lines.append('  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ns4="http://www.garmin.com/xmlschemas/ProfileExtension/v1">')
 
-    # Add the rest of the content
-    ET.indent(root, space="  ", level=1)
+    # Add the rest of the content. Level 2 gives the same layout as indenting level 1 and then
+    # prefixing every line, without touching line breaks inside text values (e.g. Notes).
+    ET.indent(root, space="  ", level=2)
     for child in root:
         child_str = ET.tostring(child, encoding='unicode')
-        # Indent properly
-        indented_lines = ['  ' + line if line.strip() else line for line in child_str.split('\n')]
-        lines.extend(indented_lines[:-1])  # Skip last empty line
+        child_lines = child_str.split('\n')
+        lines.append('  ' + child_lines[0])
+        lines.extend(child_lines[1:-1])  # Skip the trailing indentation line
 
     lines.append('</TrainingCenterDatabase>')
 
