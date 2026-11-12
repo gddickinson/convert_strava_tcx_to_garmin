@@ -31,9 +31,12 @@ from tcx_core import (  # noqa: F401  (re-exported)
 )
 
 
+GARMIN_SUFFIX = '_garmin.tcx'
+
+
 def garmin_output_name(input_file):
     """Default output name: 'ride.tcx' -> 'ride_garmin.tcx' (same folder)"""
-    return f"{os.path.splitext(input_file)[0]}_garmin.tcx"
+    return f"{os.path.splitext(input_file)[0]}{GARMIN_SUFFIX}"
 
 
 def clean_tcx_for_garmin(input_file, output_file=None, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
@@ -55,6 +58,10 @@ def clean_tcx_for_garmin(input_file, output_file=None, default_lat=DEFAULT_LAT, 
     # Generate output filename if not provided
     if output_file is None:
         output_file = garmin_output_name(input_file)
+
+    # Never overwrite the original
+    if os.path.exists(output_file) and os.path.samefile(input_file, output_file):
+        raise ValueError(f"Output file '{output_file}' is the input file; choose another name")
 
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(text)
@@ -95,14 +102,17 @@ def process_batch(input_folder, output_folder=None, default_lat=DEFAULT_LAT, def
     if not os.path.isdir(input_folder):
         raise ValueError(f"Input folder '{input_folder}' does not exist or is not a directory")
 
-    # Find all TCX files
-    tcx_files = []
-    for filename in os.listdir(input_folder):
-        if filename.lower().endswith('.tcx'):
+    # Find all TCX files, skipping the outputs of an earlier run (*_garmin.tcx)
+    tcx_files, skipped = [], []
+    for filename in sorted(os.listdir(input_folder)):
+        if filename.lower().endswith(GARMIN_SUFFIX):
+            skipped.append(filename)
+        elif filename.lower().endswith('.tcx'):
             tcx_files.append(os.path.join(input_folder, filename))
 
     if not tcx_files:
-        raise ValueError(f"No TCX files found in folder '{input_folder}'")
+        note = f" (skipped {len(skipped)} already converted *_garmin.tcx files)" if skipped else ""
+        raise ValueError(f"No TCX files found in folder '{input_folder}'{note}")
 
     # Create output folder if specified
     if output_folder and not os.path.exists(output_folder):
@@ -111,10 +121,13 @@ def process_batch(input_folder, output_folder=None, default_lat=DEFAULT_LAT, def
     results = {
         'successful': [],
         'failed': [],
+        'skipped': skipped,
         'total': len(tcx_files)
     }
 
     print(f"Found {len(tcx_files)} TCX files to process...")
+    if skipped:
+        print(f"Skipping {len(skipped)} already converted *_garmin.tcx files")
 
     for i, input_file in enumerate(tcx_files, 1):
         filename = os.path.basename(input_file)
@@ -187,6 +200,8 @@ def main():
             print(f"Total files: {results['total']}")
             print(f"Successful: {len(results['successful'])}")
             print(f"Failed: {len(results['failed'])}")
+            if results['skipped']:
+                print(f"Skipped (already converted): {len(results['skipped'])}")
 
             if results['successful']:
                 print(f"\n✓ Successfully converted files:")

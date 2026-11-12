@@ -6,6 +6,7 @@ import unittest
 import xml.etree.ElementTree as ET
 
 from tcx_converter import (
+    process_batch,
     clean_tcx_for_garmin,
     convert_tcx_bytes,
     create_garmin_root,
@@ -273,6 +274,36 @@ class TestLapExtensions(unittest.TestCase):
         self.assertEqual(self.lx("<TotalTimeSeconds>0</TotalTimeSeconds><DistanceMeters>10</DistanceMeters>"
                                  "<Extensions/>"), [])
         self.assertIsNone(self.lx("<TotalTimeSeconds>60</TotalTimeSeconds>"))
+
+
+class TestBatch(unittest.TestCase):
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+        for name in ("ride.tcx", "run.TCX"):
+            with open(os.path.join(self.tmpdir, name), "w") as f:
+                f.write(SAMPLE_TCX)
+
+    def test_second_run_skips_earlier_outputs(self):
+        # Regression: a second batch run in the same folder converted ride_garmin.tcx into ride_garmin_garmin.tcx
+        first = process_batch(self.tmpdir)
+        self.assertEqual(len(first["successful"]), 2)
+        second = process_batch(self.tmpdir)
+        self.assertEqual(sorted(i["input"] for i in second["successful"]), ["ride.tcx", "run.TCX"])
+        self.assertEqual(sorted(second["skipped"]), ["ride_garmin.tcx", "run_garmin.tcx"])
+        self.assertFalse(any("garmin_garmin" in f for f in os.listdir(self.tmpdir)))
+
+    def test_folder_of_outputs_only_is_an_error(self):
+        out = tempfile.mkdtemp()
+        process_batch(self.tmpdir, out)
+        with self.assertRaises(ValueError):
+            process_batch(out)
+
+    def test_never_overwrites_the_input(self):
+        path = os.path.join(self.tmpdir, "ride.tcx")
+        with self.assertRaises(ValueError):
+            clean_tcx_for_garmin(path, os.path.join(self.tmpdir, ".", "ride.tcx"))
+        with open(path) as f:
+            self.assertEqual(f.read(), SAMPLE_TCX)
 
 
 if __name__ == "__main__":

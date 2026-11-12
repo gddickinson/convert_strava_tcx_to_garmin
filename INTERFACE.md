@@ -65,7 +65,7 @@ convert_strava_tcx_to_garmin/
 | `write_garmin_format_file()` | `tcx_converter.py` | Writes a converted tree to a file (via `garmin_xml_string`) |
 | `garmin_output_name()` | `tcx_converter.py` | `ride.tcx` -> `ride_garmin.tcx` |
 | `print_changes()` | `tcx_converter.py` | Prints `GARMIN_CHANGES` (verbose mode) |
-| `process_batch()` | `tcx_converter.py` | Batch-converts all TCX files in a folder |
+| `process_batch()` | `tcx_converter.py` | Batch-converts all TCX files in a folder (skips `*_garmin.tcx` outputs) |
 | `main()` | `tcx_converter.py` | CLI entry point (argparse) |
 
 ## Configuration Constants (all in `tcx_core.py`)

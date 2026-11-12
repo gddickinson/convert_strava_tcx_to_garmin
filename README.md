@@ -84,6 +84,9 @@ Convert all TCX files in a folder:
 python tcx_converter.py /path/to/folder/with/tcx/files
 ```
 
+Files already ending in `_garmin.tcx` (the output of an earlier run) are skipped, so running the same command twice
+does not produce `_garmin_garmin.tcx` files. The converter never overwrites its input file.
+
 Put converted files in a separate output folder:
 ```bash
 python tcx_converter.py /path/to/input/folder -o /path/to/output/folder
