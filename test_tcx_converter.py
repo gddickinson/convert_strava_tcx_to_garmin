@@ -227,5 +227,29 @@ class TestRecordedGps(unittest.TestCase):
         self.assertEqual(tp.find("t:AltitudeMeters", NS).text, DEFAULT_ALTITUDE)
 
 
+class TestSensorData(unittest.TestCase):
+    def convert_point(self, inner):
+        return converted(tcx(trackpoint("<Time>2024-01-15T10:30:00Z</Time>" + inner))).find(".//t:Trackpoint", NS)
+
+    def test_heart_rate_cadence_and_power_are_kept(self):
+        # Regression: trackpoint heart rate, cadence and power were dropped although the README
+        # lists them as preserved
+        tp = self.convert_point("<DistanceMeters>10</DistanceMeters><HeartRateBpm><Value>150</Value></HeartRateBpm>"
+                                "<Cadence>85</Cadence><Extensions><ns3:TPX><ns3:Watts>150</ns3:Watts></ns3:TPX></Extensions>")
+        self.assertEqual(tp.find("t:HeartRateBpm/t:Value", NS).text, "150")
+        self.assertEqual(tp.find("t:Cadence", NS).text, "85")
+        tpx = tp.find("t:Extensions/x:TPX", NS)
+        self.assertEqual([(c.tag.split("}")[1], c.text) for c in tpx], [("Speed", "3.0"), ("Watts", "150")])
+        # TCX schema order
+        self.assertEqual([c.tag.split("}")[1] for c in tp],
+                         ["Time", "Position", "AltitudeMeters", "DistanceMeters", "HeartRateBpm", "Cadence", "Extensions"])
+
+    def test_recorded_speed_is_kept_instead_of_the_estimate(self):
+        tp = self.convert_point("<Extensions><ns3:TPX><ns3:Speed>4.2</ns3:Speed><ns3:RunCadence>88</ns3:RunCadence>"
+                                "<ns3:Watts>300</ns3:Watts></ns3:TPX></Extensions>")
+        tpx = tp.find("t:Extensions/x:TPX", NS)
+        self.assertEqual([(c.tag.split("}")[1], c.text) for c in tpx], [("Speed", "4.2"), ("RunCadence", "88"), ("Watts", "300")])
+
+
 if __name__ == "__main__":
     unittest.main()

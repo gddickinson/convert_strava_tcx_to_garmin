@@ -111,7 +111,8 @@ Changes made to match Garmin Connect format exactly:
 - Added Garmin-style Author section with Connect Api
 - Added dummy GPS coordinates for indoor activity (recorded GPS is kept)
 - Added AltitudeMeters to trackpoints of activities without altitude data
-- Converted power data to speed estimates
+- Estimated speed from power where no speed was recorded
+- Kept heart rate, cadence and power data
 - Maintained all timing and distance data
 - Used GPS coordinates: 30.2672, -97.7431 (Default: Austin, TX)
 ```
@@ -136,14 +137,14 @@ The script transforms Strava TCX files to match Garmin Connect's exact requireme
 - **GPS coordinates** - Adds dummy latitude/longitude for indoor activities (activities with recorded GPS keep their own positions)
 - **Altitude data** - Adds the required AltitudeMeters to every trackpoint of activities without altitude data (recorded altitude is kept)
 - **Timestamp format** - Converts to `.000Z` format (e.g., `2025-05-22T21:09:59.000Z`)
-- **Speed data** - Converts power measurements to estimated speed values
+- **Speed data** - Estimates speed from power where the file has no recorded speed
 - **Extensions format** - Uses proper `ns3:TPX` namespace format
 
 ### Preserved Data
 - ✅ All timing information
 - ✅ Distance measurements
 - ✅ Heart rate data
-- ✅ Power/cadence data (converted to speed estimates)
+- ✅ Power and cadence data (power also gives a speed estimate when no speed was recorded)
 - ✅ Workout duration and calories
 - ✅ All performance metrics
 

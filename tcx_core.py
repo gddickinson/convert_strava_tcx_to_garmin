@@ -28,7 +28,8 @@ GARMIN_CHANGES = [
     "Added Garmin-style Author section with Connect Api",
     "Added dummy GPS coordinates for indoor activity (recorded GPS is kept)",
     "Added AltitudeMeters to trackpoints of activities without altitude data",
-    "Converted power data to speed estimates",
+    "Estimated speed from power where no speed was recorded",
+    "Kept heart rate, cadence and power data",
     "Added ns3:LX lap extensions with average speed",
     "Maintained all timing and distance data",
 ]
@@ -199,7 +200,7 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng, ke
     """
     new_trackpoint = ET.Element('Trackpoint')
 
-    # Process in specific order: Time, Position, Altitude, Distance, Extensions
+    # Process in TCX schema order: Time, Position, Altitude, Distance, HeartRate, Cadence, Extensions
 
     # 1. Time with .000Z format
     for child in trackpoint:
@@ -236,31 +237,38 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng, ke
             new_distance.text = child.text
             break
 
-    # 5. Extensions in Garmin format
+    # 5. Heart rate and cadence (if present in original)
+    for name in ('HeartRateBpm', 'Cadence'):
+        child = find_child(trackpoint, name)
+        if child is not None:
+            new_trackpoint.append(copy_element_recursive(child))
+
+    # 6. Extensions in Garmin format
     new_ext = ET.SubElement(new_trackpoint, 'Extensions')
     tpx_elem = ET.SubElement(new_ext, 'ns3:TPX')
 
-    # Add speed if we have power/cadence data (convert power to speed estimate)
-    for child in trackpoint:
-        if child.tag.split('}')[-1] == 'Extensions':
-            for ext_child in child:
-                if 'TPX' in ext_child.tag:
-                    for data in ext_child:
-                        if 'Watts' in data.tag and data.text:
-                            # Rough conversion: watts to speed (very approximate)
-                            try:
-                                watts = float(data.text)
-                                speed = max(0.1, watts / 50.0)  # Rough conversion
-                                speed_elem = ET.SubElement(tpx_elem, 'ns3:Speed')
-                                speed_elem.text = str(speed)
-                            except (ValueError, TypeError):
-                                pass
-                            break
-            break
+    extensions = find_child(trackpoint, 'Extensions')
+    tpx = find_child(extensions, 'TPX') if extensions is not None else None
+    if tpx is not None:
+        speed = find_child(tpx, 'Speed')
+        watts = find_child(tpx, 'Watts')
+        if speed is not None and speed.text:
+            # Recorded speed
+            ET.SubElement(tpx_elem, 'ns3:Speed').text = speed.text
+        elif watts is not None and watts.text:
+            # No recorded speed: rough conversion from power (very approximate)
+            try:
+                speed_value = max(0.1, float(watts.text) / 50.0)
+                ET.SubElement(tpx_elem, 'ns3:Speed').text = str(speed_value)
+            except (ValueError, TypeError):
+                pass
+        # Keep running cadence and power, in TCX schema order (Speed, RunCadence, Watts)
+        for name in ('RunCadence', 'Watts'):
+            child = find_child(tpx, name)
+            if child is not None and child.text:
+                ET.SubElement(tpx_elem, 'ns3:' + name).text = child.text
 
-    # Without power data the TPX element stays empty, like in the working Garmin file.
-    # (Previously a truth test on the found <ns3:Speed> element was always true, so a second
-    # <ns3:Speed>0.1</ns3:Speed> was appended after every power-based speed.)
+    # Without speed or power data the TPX element stays empty, like in the working Garmin file.
 
     return new_trackpoint
 
