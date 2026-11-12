@@ -187,5 +187,20 @@ class TestMultiLineText(unittest.TestCase):
         self.assertEqual(out.find(".//t:Notes", NS).text, notes)
 
 
+class TestTimestamps(unittest.TestCase):
+    def test_utc_offsets_are_converted_to_utc(self):
+        # Regression: '23:59:30+02:00' was written as '23:59:30.000Z' (two hours wrong)
+        out = converted(tcx(trackpoint("<Time>2024-12-31T23:59:30+02:00</Time>")
+                            .replace("2024-01-15T10:30:00Z", "2025-01-01T05:30:05.5-05:30")))
+        self.assertEqual(out.find(".//t:Trackpoint/t:Time", NS).text, "2024-12-31T21:59:30.000Z")
+        self.assertEqual(out.find(".//t:Lap", NS).get("StartTime"), "2025-01-01T11:00:05.000Z")
+        self.assertEqual(out.find(".//t:Id", NS).text, "2025-01-01T11:00:05.000Z")
+
+    def test_utc_and_unparseable_times_unchanged(self):
+        out = converted(tcx(trackpoint("<Time>soon</Time>")))
+        self.assertEqual(out.find(".//t:Id", NS).text, "2024-01-15T10:30:00.000Z")
+        self.assertEqual(out.find(".//t:Trackpoint/t:Time", NS).text, "soon")
+
+
 if __name__ == "__main__":
     unittest.main()

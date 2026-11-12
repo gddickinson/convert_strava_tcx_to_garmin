@@ -20,6 +20,7 @@ convert_strava_tcx_to_garmin/
 | `clean_tcx_for_garmin()` | `tcx_converter.py` | Main entry: converts a single TCX file to Garmin format |
 | `convert_tcx_bytes()` | `tcx_core.py` | Converts TCX data (bytes/str) and returns the Garmin XML text |
 | `garmin_xml_string()` | `tcx_core.py` | Serialises the converted tree in the exact Garmin layout |
+| `format_garmin_time()` | `tcx_core.py` | ISO time -> `YYYY-MM-DDTHH:MM:SS.000Z` in UTC (unparseable text unchanged) |
 | `create_garmin_root()` | `tcx_core.py` | Creates root XML element with Garmin namespaces |
 | `convert_activity_to_garmin_format()` | `tcx_core.py` | Converts Activity element (sets Sport="Other", formats timestamps) |
 | `convert_lap_to_garmin_format()` | `tcx_core.py` | Converts Lap element with extensions |

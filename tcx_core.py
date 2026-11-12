@@ -9,7 +9,7 @@ Contents:
 """
 
 import xml.etree.ElementTree as ET
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Default GPS coordinates for indoor activities (Austin, TX)
 DEFAULT_LAT = 30.2672
@@ -69,6 +69,21 @@ def convert_tcx_bytes(data, default_lat=DEFAULT_LAT, default_lng=DEFAULT_LNG):
 
 
 
+def format_garmin_time(text):
+    """
+    Format an ISO 8601 time as Garmin's 'YYYY-MM-DDTHH:MM:SS.000Z' (UTC, fraction dropped)
+
+    Times with a UTC offset are converted to UTC first; times without one are taken as UTC.
+    Text that is not an ISO time (or None) is returned unchanged.
+    """
+    try:
+        dt = datetime.fromisoformat(text.replace('Z', '+00:00'))
+        if dt.tzinfo is not None:
+            dt = dt.astimezone(timezone.utc)
+        return dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    except (ValueError, AttributeError, OverflowError):
+        return text
+
 def create_garmin_root():
     """Create root element with exact Garmin namespace format"""
     root = ET.Element('TrainingCenterDatabase')
@@ -100,11 +115,7 @@ def convert_activity_to_garmin_format(activity, default_lat, default_lng):
         if tag == 'Id':
             new_id = ET.SubElement(new_activity, 'Id')
             # Add .000Z format like Garmin
-            try:
-                dt = datetime.fromisoformat(child.text.replace('Z', '+00:00'))
-                new_id.text = dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
-            except (ValueError, AttributeError):
-                new_id.text = child.text
+            new_id.text = format_garmin_time(child.text)
 
         elif tag == 'Creator':
             # Skip Creator - Garmin files don't have this
@@ -130,11 +141,7 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng):
     # Copy StartTime with .000Z format
     start_time = lap.get('StartTime')
     if start_time:
-        try:
-            dt = datetime.fromisoformat(start_time.replace('Z', '+00:00'))
-            new_lap.set('StartTime', dt.strftime('%Y-%m-%dT%H:%M:%S.000Z'))
-        except (ValueError, AttributeError):
-            new_lap.set('StartTime', start_time)
+        new_lap.set('StartTime', format_garmin_time(start_time))
 
     # Copy lap-level elements
     for child in lap:
@@ -176,11 +183,7 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
     for child in trackpoint:
         if child.tag.split('}')[-1] == 'Time':
             new_time = ET.SubElement(new_trackpoint, 'Time')
-            try:
-                dt = datetime.fromisoformat(child.text.replace('Z', '+00:00'))
-                new_time.text = dt.strftime('%Y-%m-%dT%H:%M:%S.000Z')
-            except (ValueError, AttributeError):
-                new_time.text = child.text
+            new_time.text = format_garmin_time(child.text)
             break
 
     # 2. Position (always add)
