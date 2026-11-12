@@ -223,14 +223,9 @@ def convert_trackpoint_to_garmin_format(trackpoint, default_lat, default_lng):
                             break
             break
 
-    # If no speed was added, add a minimal speed
-    if not tpx_elem.find('ns3:Speed'):
-        if len(tpx_elem) == 0:
-            # Empty TPX element like in working file
-            pass
-        else:
-            speed_elem = ET.SubElement(tpx_elem, 'ns3:Speed')
-            speed_elem.text = "0.1"
+    # Without power data the TPX element stays empty, like in the working Garmin file.
+    # (Previously a truth test on the found <ns3:Speed> element was always true, so a second
+    # <ns3:Speed>0.1</ns3:Speed> was appended after every power-based speed.)
 
     return new_trackpoint
 

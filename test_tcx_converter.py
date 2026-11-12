@@ -7,6 +7,7 @@ import xml.etree.ElementTree as ET
 
 from tcx_converter import (
     clean_tcx_for_garmin,
+    convert_tcx_bytes,
     create_garmin_root,
     copy_element_recursive,
     add_garmin_author_section,
@@ -14,6 +15,30 @@ from tcx_converter import (
     DEFAULT_LNG,
     DEFAULT_ALTITUDE,
 )
+
+NS = {"t": "http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2",
+      "x": "http://www.garmin.com/xmlschemas/ActivityExtension/v2"}
+
+
+def tcx(activity_body, sport="Biking"):
+    """A minimal TCX document wrapping one Activity's children."""
+    return (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2" '
+        'xmlns:ns3="http://www.garmin.com/xmlschemas/ActivityExtension/v2">'
+        f'<Activities><Activity Sport="{sport}">{activity_body}</Activity></Activities>'
+        '</TrainingCenterDatabase>'
+    )
+
+
+def trackpoint(inner):
+    return f'<Id>2024-01-15T10:30:00Z</Id><Lap StartTime="2024-01-15T10:30:00Z"><Track><Trackpoint>{inner}</Trackpoint></Track></Lap>'
+
+
+def converted(text):
+    """Convert TCX text and parse the result back (output declares the default Garmin namespaces)."""
+    return ET.fromstring(convert_tcx_bytes(text.encode("utf-8")))
+
 
 SAMPLE_TCX = """\
 <?xml version="1.0" encoding="UTF-8"?>
@@ -142,6 +167,15 @@ class TestCleanTcxForGarmin(unittest.TestCase):
             content = f.read()
         self.assertIn("51.5074", content)
         self.assertIn("-0.1278", content)
+
+
+class TestPowerToSpeed(unittest.TestCase):
+    def test_one_speed_per_trackpoint(self):
+        # Regression: a second <ns3:Speed>0.1</ns3:Speed> was appended after every power-based speed
+        out = converted(tcx(trackpoint(
+            "<Time>2024-01-15T10:30:00Z</Time><Extensions><ns3:TPX><ns3:Watts>150</ns3:Watts></ns3:TPX></Extensions>")))
+        speeds = [e.text for e in out.iter("{%s}Speed" % NS["x"])]
+        self.assertEqual(speeds, ["3.0"])
 
 
 if __name__ == "__main__":
