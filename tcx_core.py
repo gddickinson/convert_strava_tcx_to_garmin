@@ -8,6 +8,7 @@ Contents:
     create_garmin_root, convert_*_to_garmin_format, add_garmin_author_section, copy_element_recursive
 """
 
+import math
 import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
@@ -16,8 +17,8 @@ DEFAULT_LAT = 30.2672
 DEFAULT_LNG = -97.7431
 # Default altitude in meters for trackpoints without altitude data
 DEFAULT_ALTITUDE = "192.60000610351562"
-# Default average speed for lap extensions (m/s)
-DEFAULT_AVG_SPEED = "4.9846988191804575"
+# Lap extension (ns3:LX) values kept from the input, in TCX ActivityExtension schema order
+LX_FIELDS = ('AvgSpeed', 'MaxBikeCadence', 'AvgRunCadence', 'MaxRunCadence', 'Steps', 'AvgWatts', 'MaxWatts')
 
 # What the conversion changes (printed by the CLI with -v, shown by the web app)
 GARMIN_CHANGES = [
@@ -30,7 +31,7 @@ GARMIN_CHANGES = [
     "Added AltitudeMeters to trackpoints of activities without altitude data",
     "Estimated speed from power where no speed was recorded",
     "Kept heart rate, cadence and power data",
-    "Added ns3:LX lap extensions with average speed",
+    "Kept ns3:LX lap extensions (average speed from distance/time if not recorded)",
     "Maintained all timing and distance data",
 ]
 
@@ -168,16 +169,38 @@ def convert_lap_to_garmin_format(lap, default_lat, default_lng, keep_position=Fa
                                                        keep_position, keep_altitude)
             new_lap.append(new_track)
         elif tag == 'Extensions':
-            # Create Garmin-style lap extensions with average speed
+            # Garmin-style lap extensions: the recorded ns3:LX values, with AvgSpeed computed if missing
             new_ext = ET.SubElement(new_lap, 'Extensions')
-            lx_elem = ET.SubElement(new_ext, 'ns3:LX')
-            avg_speed = ET.SubElement(lx_elem, 'ns3:AvgSpeed')
-            avg_speed.text = DEFAULT_AVG_SPEED
+            new_ext.append(convert_lap_extensions(lap, child))
         else:
             # Copy other lap elements
             new_lap.append(copy_element_recursive(child))
 
     return new_lap
+
+def lap_avg_speed(lap):
+    """Average speed (m/s, as text) from the lap's DistanceMeters / TotalTimeSeconds, or None"""
+    try:
+        distance = float(find_child(lap, 'DistanceMeters').text)
+        seconds = float(find_child(lap, 'TotalTimeSeconds').text)
+    except (AttributeError, TypeError, ValueError):
+        return None
+    if not (math.isfinite(distance) and math.isfinite(seconds) and seconds > 0):
+        return None
+    return str(distance / seconds)
+
+def convert_lap_extensions(lap, extensions):
+    """ns3:LX with the lap's recorded values in schema order; AvgSpeed from distance/time when not recorded"""
+    lx_elem = ET.Element('ns3:LX')
+    lx = find_child(extensions, 'LX')
+    for name in LX_FIELDS:
+        child = find_child(lx, name) if lx is not None else None
+        text = child.text if child is not None and child.text else None
+        if name == 'AvgSpeed' and text is None:
+            text = lap_avg_speed(lap)
+        if text is not None:
+            ET.SubElement(lx_elem, 'ns3:' + name).text = text
+    return lx_elem
 
 def convert_track_to_garmin_format(track, default_lat, default_lng, keep_position=False, keep_altitude=False):
     """Convert track to Garmin format"""

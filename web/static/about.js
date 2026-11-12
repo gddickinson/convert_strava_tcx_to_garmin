@@ -11,7 +11,7 @@ route('about', async () => {
     <ul>${list(info.changes, c => `<li>${esc(c)}</li>`)}</ul>
     <p>Activities without GPS get the placeholder position ${info.default_lat}, ${info.default_lng}
       (${esc(info.default_place)}, changeable) and altitude ${esc(info.default_altitude)} m on every trackpoint. Lap
-      extensions, where a lap has them, are rewritten with the fixed average speed ${esc(info.default_avg_speed)} m/s. Where a trackpoint has
+      extensions keep their recorded values; a missing average speed is computed as lap distance / lap time. Where a trackpoint has
       power but no recorded speed, speed is estimated as max(0.1, watts / 50) m/s, a rough figure.</p>
     <h2>Workflow for Peloton users</h2>
     <ol><li>Export your workouts from Strava as TCX files.</li><li>Convert them here (or with the script).</li>

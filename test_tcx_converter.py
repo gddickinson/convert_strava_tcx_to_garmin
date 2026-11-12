@@ -251,5 +251,29 @@ class TestSensorData(unittest.TestCase):
         self.assertEqual([(c.tag.split("}")[1], c.text) for c in tpx], [("Speed", "4.2"), ("RunCadence", "88"), ("Watts", "300")])
 
 
+class TestLapExtensions(unittest.TestCase):
+    def lx(self, lap_inner):
+        out = converted(tcx(f'<Id>2024-01-15T10:30:00Z</Id><Lap StartTime="2024-01-15T10:30:00Z">{lap_inner}</Lap>'))
+        lx = out.find(".//t:Lap/t:Extensions/x:LX", NS)
+        return None if lx is None else [(c.tag.split("}")[1], c.text) for c in lx]
+
+    def test_recorded_lap_values_are_kept(self):
+        # Regression: every lap's extensions were replaced by a fixed AvgSpeed of 4.98 m/s
+        self.assertEqual(self.lx("<TotalTimeSeconds>100</TotalTimeSeconds><DistanceMeters>500</DistanceMeters>"
+                                 "<Extensions><ns3:LX><ns3:MaxWatts>300</ns3:MaxWatts><ns3:AvgSpeed>6.5</ns3:AvgSpeed>"
+                                 "<ns3:AvgWatts>180</ns3:AvgWatts></ns3:LX></Extensions>"),
+                         [("AvgSpeed", "6.5"), ("AvgWatts", "180"), ("MaxWatts", "300")])
+
+    def test_missing_avg_speed_is_computed_from_distance_and_time(self):
+        self.assertEqual(self.lx("<TotalTimeSeconds>360.0</TotalTimeSeconds><DistanceMeters>318.6</DistanceMeters>"
+                                 "<Extensions><ns3:LX><ns3:AvgWatts>125</ns3:AvgWatts></ns3:LX></Extensions>"),
+                         [("AvgSpeed", str(318.6 / 360.0)), ("AvgWatts", "125")])
+
+    def test_no_speed_without_distance_or_time(self):
+        self.assertEqual(self.lx("<TotalTimeSeconds>0</TotalTimeSeconds><DistanceMeters>10</DistanceMeters>"
+                                 "<Extensions/>"), [])
+        self.assertIsNone(self.lx("<TotalTimeSeconds>60</TotalTimeSeconds>"))
+
+
 if __name__ == "__main__":
     unittest.main()

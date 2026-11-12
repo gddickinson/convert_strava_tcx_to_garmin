@@ -27,7 +27,9 @@ SNIPS = ["<!-- c -->", "<?pi x?>", "<Notes>a\n  b</Notes>",
          "<AltitudeMeters>3</AltitudeMeters>", "<Cadence/>", "<HeartRateBpm><Value>99</Value></HeartRateBpm>",
          "<Extensions><ns3:TPX><ns3:Speed>1</ns3:Speed><ns3:RunCadence>80</ns3:RunCadence></ns3:TPX></Extensions>",
          '<q:z xmlns:q="urn:q" q:a="1&#10;&#9;"/>', '<w:Watts xmlns:w="urn:w">7</w:Watts>',
-         '<x xml:lang="en" xmlns:dc="http://purl.org/dc/elements/1.1/" dc:t="1"/>', "<", "&", "\r\n"]
+         '<x xml:lang="en" xmlns:dc="http://purl.org/dc/elements/1.1/" dc:t="1"/>', "<", "&", "\r\n",
+         "<Extensions><ns3:LX><ns3:AvgWatts>99</ns3:AvgWatts><ns3:MaxBikeCadence>90</ns3:MaxBikeCadence></ns3:LX></Extensions>",
+         "<TotalTimeSeconds>42.5</TotalTimeSeconds>", "<DistanceMeters>1e3</DistanceMeters>"]
 
 
 def mutated(n, seed=7):

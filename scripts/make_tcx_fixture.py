@@ -17,7 +17,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 
-from tcx_core import convert_tcx_bytes, format_garmin_time, local_name  # noqa: E402
+from tcx_core import convert_tcx_bytes, format_garmin_time, lap_avg_speed, local_name  # noqa: E402
 
 FIXTURES = ROOT / "tests" / "fixtures"
 EXPECTED = FIXTURES / "expected"
@@ -38,6 +38,8 @@ FLOATS = ["150", " 150 ", "1_000", "1__0", "_1", "1_", "12.34", ".5", "5.", ".",
           "-Infinity", "nan", "NaN", "abc", "", "0x10", "1e400", "3.5e-07", " 12 "]
 REPRS = [30.2672, -97.7431, 0.1, 3.0, 20.0, 0.2468, 1e-05, -1e-05, 0.0001, 1e16, 9999999999999998.0, 1.5e300, 2.5e-300,
          120.0, -0.0, 123456789.123, 1 / 3, 2 / 3 * 1e-5]
+LAP_TIMES = [["318.6", "360.0"], ["500", "100"], ["1", "3"], ["10", "0"], ["10", "-5"], ["x", "5"], ["5", "inf"],
+             ["1e308", "1e-10"], [" 1_000 ", "7"], ["nan", "1"], [None, "5"], ["0", "60"]]
 NAMES = ["ride.tcx", "ride.TCX", "my.ride.tcx", ".tcx", "..tcx", "noext", "a.", ".hidden.tcx", "dir/x.tcx", "x.y/z"]
 
 
@@ -46,6 +48,13 @@ def py_float(text):
         return repr(float(text))
     except ValueError:
         return None
+
+
+def lap_element(distance, seconds):
+    lap = ET.Element("Lap")
+    ET.SubElement(lap, "TotalTimeSeconds").text = seconds
+    ET.SubElement(lap, "DistanceMeters").text = distance
+    return lap
 
 
 def summarize(data):
@@ -110,6 +119,7 @@ def build():
         "floats": [[t, py_float(t)] for t in FLOATS],
         "reprs": [[x, repr(x)] for x in REPRS],
         "speeds": [[t, repr(max(0.1, float(t) / 50.0)) if py_float(t) else None] for t in FLOATS],
+        "lap_speeds": [[d, t, lap_avg_speed(lap_element(d, t))] for d, t in LAP_TIMES],
         "names": [[n, os.path.splitext(n)[0] + "_garmin.tcx"] for n in NAMES],
         "summaries": summaries,
     }

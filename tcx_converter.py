@@ -13,12 +13,13 @@ import os
 
 from tcx_core import (  # noqa: F401  (re-exported)
     DEFAULT_ALTITUDE,
-    DEFAULT_AVG_SPEED,
     DEFAULT_LAT,
     DEFAULT_LNG,
     GARMIN_CHANGES,
+    LX_FIELDS,
     add_garmin_author_section,
     convert_activity_to_garmin_format,
+    convert_lap_extensions,
     convert_lap_to_garmin_format,
     convert_tcx_bytes,
     convert_track_to_garmin_format,
@@ -26,6 +27,7 @@ from tcx_core import (  # noqa: F401  (re-exported)
     copy_element_recursive,
     create_garmin_root,
     garmin_xml_string,
+    lap_avg_speed,
 )
 
 

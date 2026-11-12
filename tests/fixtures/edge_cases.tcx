@@ -35,6 +35,11 @@
         <Track/>
         <Extensions><x:LX><x:AvgSpeed>1.0</x:AvgSpeed></x:LX></Extensions>
       </Lap>
+      <Lap>
+        <TotalTimeSeconds>7</TotalTimeSeconds>
+        <DistanceMeters>10</DistanceMeters>
+        <Extensions><x:LX><x:MaxWatts>9</x:MaxWatts><x:Steps>12</x:Steps></x:LX></Extensions>
+      </Lap>
     </Activity>
     <Activity Sport="Running">
       <Id>20250102T030405Z</Id>

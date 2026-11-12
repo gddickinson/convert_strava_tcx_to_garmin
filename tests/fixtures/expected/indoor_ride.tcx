@@ -728,7 +728,8 @@
             </Track>
             <Extensions>
               <ns3:LX>
-                <ns3:AvgSpeed>4.9846988191804575</ns3:AvgSpeed>
+                <ns3:AvgSpeed>0.885</ns3:AvgSpeed>
+                <ns3:AvgWatts>125</ns3:AvgWatts>
               </ns3:LX>
             </Extensions>
           </Lap>

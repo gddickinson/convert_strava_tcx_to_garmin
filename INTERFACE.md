@@ -55,6 +55,7 @@ convert_strava_tcx_to_garmin/
 | `garmin_xml_string()` | `tcx_core.py` | Serialises the converted tree in the exact Garmin layout |
 | `local_name()`, `find_child()` | `tcx_core.py` | Namespace-free tag name; first child by local name |
 | `format_garmin_time()` | `tcx_core.py` | ISO time -> `YYYY-MM-DDTHH:MM:SS.000Z` in UTC (unparseable text unchanged) |
+| `convert_lap_extensions()`, `lap_avg_speed()` | `tcx_core.py` | Lap ns3:LX: recorded values, AvgSpeed = distance/time if missing |
 | `create_garmin_root()` | `tcx_core.py` | Creates root XML element with Garmin namespaces |
 | `convert_activity_to_garmin_format()` | `tcx_core.py` | Converts Activity element (sets Sport="Other", formats timestamps) |
 | `convert_lap_to_garmin_format()` | `tcx_core.py` | Converts Lap element with extensions |
@@ -74,5 +75,5 @@ convert_strava_tcx_to_garmin/
 | `DEFAULT_LAT` | 30.2672 | Latitude for indoor activities (Austin, TX) |
 | `DEFAULT_LNG` | -97.7431 | Longitude for indoor activities (Austin, TX) |
 | `DEFAULT_ALTITUDE` | "192.60..." | Altitude in meters for trackpoints |
-| `DEFAULT_AVG_SPEED` | "4.98..." | Average speed for lap extensions (m/s) |
+| `LX_FIELDS` | tuple | Lap extension values kept, in schema order |
 | `GARMIN_CHANGES` | list | Changes the conversion makes (CLI `-v`, web app) |

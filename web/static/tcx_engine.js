@@ -6,7 +6,7 @@ import { pyFloat, pyRepr, formatGarminTime } from './tcx_pyfmt.js';
 export const DEFAULT_LAT = 30.2672;
 export const DEFAULT_LNG = -97.7431;
 export const DEFAULT_ALTITUDE = '192.60000610351562';
-export const DEFAULT_AVG_SPEED = '4.9846988191804575';
+export const LX_FIELDS = ['AvgSpeed', 'MaxBikeCadence', 'AvgRunCadence', 'MaxRunCadence', 'Steps', 'AvgWatts', 'MaxWatts'];
 const XSI = 'http://www.w3.org/2001/XMLSchema-instance';
 
 export const localName = tag => tag.split('}').pop();
@@ -46,10 +46,30 @@ function convertLap(lap, lat, lng, keep) {
   for (const child of lap.children) {
     const tag = localName(child.tag);
     if (tag === 'Track') l.children.push(convertTrack(child, lat, lng, keep));
-    else if (tag === 'Extensions') sub(sub(sub(l, 'Extensions'), 'ns3:LX'), 'ns3:AvgSpeed', DEFAULT_AVG_SPEED);
+    else if (tag === 'Extensions') sub(l, 'Extensions').children.push(convertLapExtensions(lap, child));
     else l.children.push(copyElement(child));
   }
   return l;
+}
+
+// lap_avg_speed: str(DistanceMeters / TotalTimeSeconds) when both parse as finite floats and time > 0, else null
+export function lapAvgSpeed(lap) {
+  const d = findChild(lap, 'DistanceMeters'), t = findChild(lap, 'TotalTimeSeconds');
+  if (!d || !t || d.text == null || t.text == null) return null;
+  const dv = pyFloat(d.text), tv = pyFloat(t.text);
+  if (dv === null || tv === null || !Number.isFinite(dv) || !Number.isFinite(tv) || !(tv > 0)) return null;
+  return pyRepr(dv / tv);
+}
+
+function convertLapExtensions(lap, ext) {
+  const lxOut = el('ns3:LX'), lx = findChild(ext, 'LX');
+  for (const name of LX_FIELDS) {
+    const c = lx ? findChild(lx, name) : null;
+    let text = c && c.text ? c.text : null;
+    if (name === 'AvgSpeed' && text === null) text = lapAvgSpeed(lap);
+    if (text !== null) sub(lxOut, 'ns3:' + name, text);
+  }
+  return lxOut;
 }
 
 function convertTrack(track, lat, lng, keep) {

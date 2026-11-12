@@ -5,7 +5,7 @@ import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
 import assert from 'node:assert/strict';
-import { convertTcx } from './tcx_engine.js';
+import { convertTcx, lapAvgSpeed } from './tcx_engine.js';
 import { formatGarminTime, pyFloat, pyRepr, garminOutputName } from './tcx_pyfmt.js';
 import { summarize, routeSvg } from './tcx_summary.js';
 import { crc32, makeZip, uniqueNames } from './zip.js';
@@ -39,6 +39,10 @@ for (const [t, want] of values.speeds) check('speed ' + t, () => {
   assert.equal(w === null ? null : pyRepr(w / 50 > 0.1 ? w / 50 : 0.1), want, t);
 });
 for (const [name, want] of values.names) check('name ' + name, () => assert.equal(garminOutputName(name), want));
+for (const [d, t, want] of values.lap_speeds) check(`lap speed ${d}/${t}`, () => {
+  const lap = { children: [{ tag: 'TotalTimeSeconds', text: t, children: [] }, { tag: 'DistanceMeters', text: d, children: [] }] };
+  assert.equal(lapAvgSpeed(lap), want);
+});
 check('time null', () => assert.equal(formatGarminTime(null), null));
 
 // 3. preview summary, same numbers as the Python in make_tcx_fixture.py

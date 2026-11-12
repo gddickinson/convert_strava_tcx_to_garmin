@@ -82,7 +82,18 @@ break &amp; tab	here</Name>
             <Track />
             <Extensions>
               <ns3:LX>
-                <ns3:AvgSpeed>4.9846988191804575</ns3:AvgSpeed>
+                <ns3:AvgSpeed>1.0</ns3:AvgSpeed>
+              </ns3:LX>
+            </Extensions>
+          </Lap>
+          <Lap>
+            <TotalTimeSeconds>7</TotalTimeSeconds>
+            <DistanceMeters>10</DistanceMeters>
+            <Extensions>
+              <ns3:LX>
+                <ns3:AvgSpeed>1.4285714285714286</ns3:AvgSpeed>
+                <ns3:Steps>12</ns3:Steps>
+                <ns3:MaxWatts>9</ns3:MaxWatts>
               </ns3:LX>
             </Extensions>
           </Lap>

@@ -48,7 +48,6 @@ def info():
         "default_lng": tcx_core.DEFAULT_LNG,
         "default_place": "Austin, TX",
         "default_altitude": tcx_core.DEFAULT_ALTITUDE,
-        "default_avg_speed": tcx_core.DEFAULT_AVG_SPEED,
         "changes": tcx_core.GARMIN_CHANGES,
         "samples": len(SAMPLES),
     }
