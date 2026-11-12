@@ -24,6 +24,13 @@
   preview summary. `tests/test_js_port.py`: 800 seeded mutated files agree (outputs or both rejected); ad-hoc fuzzing
   during development: 30,000 timestamps and 4,500 files, 0 differences after fixing two port gaps.
 - Not ported: ISO week dates (`2024-W03-1`) in `fromisoformat` (TCX never uses them; JS leaves them unchanged).
-- Open for George (not changed): lap `Extensions` are replaced by a fixed AvgSpeed 4.9847 m/s (recorded lap
-  values such as AvgSpeed/AvgWatts are dropped); batch mode in the input folder re-converts earlier `*_garmin.tcx`
-  outputs on a second run; the output indentation is uneven (cosmetic, kept for byte-identical output).
+- Open at first (cosmetic, not changed): the output indentation is uneven; kept so the output stays byte-identical.
+
+## 2026-11-11 (later): follow-up fixes requested via the lead
+- Lap extensions keep their recorded ns3:LX values (AvgSpeed, AvgWatts, MaxWatts, ... in schema order); a missing
+  AvgSpeed is computed as DistanceMeters / TotalTimeSeconds (omitted if not computable). The fixed 4.98 m/s constant
+  (DEFAULT_AVG_SPEED) is gone. JS port updated; edge-case sample gained a lap without AvgSpeed; fixtures regenerated.
+- Batch mode skips earlier `*_garmin.tcx` outputs (reported as skipped) and processes files in sorted order; a
+  single-file conversion refuses to write over its own input.
+- All checks re-run: pytest 42 passed (tests/ + test_tcx_converter.py), node 144 checks byte-identical, screenshots
+  static + local all ok, Python check in the local app byte-identical.
